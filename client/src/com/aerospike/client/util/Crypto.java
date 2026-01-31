@@ -48,10 +48,7 @@ public final class Crypto {
 		return Base64.decode(src, off, len);
 	}
 
-	/**
-	 * Encode bytes into a base64 encoded string.
-	 */
 	public static String encodeBase64(byte[] src) {
-		return Base64.encode(src, 0, src.length, false);
+		return ENCODER.encodeToString(src);
 	}
 }
