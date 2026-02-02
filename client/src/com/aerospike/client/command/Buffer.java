@@ -26,6 +26,8 @@ import com.aerospike.client.util.Unpacker;
 import com.aerospike.client.util.Utf8;
 
 public final class Buffer {
+    private static final char[] HEX = "0123456789abcdef".toCharArray();
+
 
 	public static Value bytesToKeyValue(int type, byte[] buf, int offset, int len)
 		throws AerospikeException {
@@ -244,12 +246,28 @@ public final class Buffer {
 	}
 
 	public static String bytesToHexString(byte[] buf, int offset, int length) {
-		StringBuilder sb = new StringBuilder(length * 2);
-
-		for (int i = offset; i < length; i++) {
-			sb.append(String.format("%02x", buf[i]));
+		// Preserve original behavior for negative initial capacity (length * 2 overflow/negative).
+		int initCap = length * 2;
+		if (initCap < 0) {
+			// Original code would have attempted new StringBuilder(length * 2) and thrown.
+			throw new NegativeArraySizeException();
 		}
-		return sb.toString();
+
+		int count = length - offset;
+		// If no bytes to process, original code returns an empty string (loop doesn't execute).
+		if (count <= 0) {
+			return "";
+		}
+
+		// Allocate char array for hex chars (2 chars per input byte).
+		char[] chars = new char[count << 1];
+		int j = 0;
+		for (int i = offset; i < length; i++) {
+			int v = buf[i] & 0xFF;
+			chars[j++] = HEX[v >>> 4];
+			chars[j++] = HEX[v & 0x0F];
+		}
+		return new String(chars);
 	}
 
 	public static Value bytesToLongValue(byte[] buf, int offset, int len) {
