@@ -26,6 +26,11 @@ import com.aerospike.client.util.Unpacker;
 import com.aerospike.client.util.Utf8;
 
 public final class Buffer {
+    private static final char[] HEX = {
+    		'0','1','2','3','4','5','6','7',
+    		'8','9','a','b','c','d','e','f'
+    	};
+
 
 	public static Value bytesToKeyValue(int type, byte[] buf, int offset, int len)
 		throws AerospikeException {
@@ -231,16 +236,28 @@ public final class Buffer {
 		return val;
 	}
 
-	public static String bytesToHexString(byte[] buf) {
-		if (buf == null || buf.length == 0) {
+	public static String bytesToHexString(byte[] buf, int offset, int length) {
+		// Preserve original behavior where a negative capacity (length * 2) causes the same exception.
+		int capacity = length * 2;
+		if (capacity < 0) {
+			// Trigger the same exception behavior as new StringBuilder(capacity) would.
+			new StringBuilder(capacity);
+		}
+
+		int count = length - offset;
+		if (count <= 0) {
 			return "";
 		}
-		StringBuilder sb = new StringBuilder(buf.length * 2);
 
-		for (int i = 0; i < buf.length; i++) {
-			sb.append(String.format("%02x", buf[i]));
+		char[] out = new char[count * 2];
+		int pos = 0;
+
+		for (int i = offset; i < length; i++) {
+			int v = buf[i] & 0xFF;
+			out[pos++] = HEX[v >>> 4];
+			out[pos++] = HEX[v & 0x0F];
 		}
-		return sb.toString();
+		return new String(out);
 	}
 
 	public static String bytesToHexString(byte[] buf, int offset, int length) {
