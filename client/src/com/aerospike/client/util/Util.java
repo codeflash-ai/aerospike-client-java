@@ -122,19 +122,52 @@ public final class Util {
 	 * Each individual string will be treated as hex if the string prefix is "0x".
 	 */
 	public static BigInteger[] toBigIntegerArray(String str) {
-		String[] strArray = str.split(",");
-		BigInteger[] bigArray = new BigInteger[strArray.length];
+		// Manual tokenization to avoid regex overhead from String.split(",")
+		int len = str.length();
+		java.util.ArrayList<String> tokens = new java.util.ArrayList<>();
+		int start = 0;
+		boolean foundDelimiter = false;
+
+		for (int i = 0; i < len; i++) {
+			if (str.charAt(i) == ',') {
+				tokens.add(str.substring(start, i));
+				start = i + 1;
+				foundDelimiter = true;
+			}
+		}
+		// Add last token (or the whole string if no delimiter)
+		tokens.add(str.substring(start, len));
+
+		// String.split(",") (no limit) discards trailing empty strings if there was at least one match.
+		if (foundDelimiter) {
+			int tsize = tokens.size();
+			while (tsize > 0 && tokens.get(tsize - 1).length() == 0) {
+				tokens.remove(--tsize);
+			}
+		}
+
+		BigInteger[] bigArray = new BigInteger[tokens.size()];
 		int count = 0;
 
-		for (String s : strArray) {
+		for (String s : tokens) {
 			if (s.startsWith("0x")) {
 				bigArray[count] = new BigInteger(s.substring(2), 16);
 			}
 			else if (s.indexOf(':') >= 0) {
 				// Some certificates show serial numbers in hex pairs delimited by colons.
 				// Remove those colons before converting to BigInteger.
-				s = s.replaceAll(":", "");
-				bigArray[count] = new BigInteger(s, 16);
+				// Use a simple char copy instead of regex replaceAll for performance.
+				int slen = s.length();
+				char[] buf = new char[slen];
+				int p = 0;
+				for (int i = 0; i < slen; i++) {
+					char c = s.charAt(i);
+					if (c != ':') {
+						buf[p++] = c;
+					}
+				}
+				String cleaned = new String(buf, 0, p);
+				bigArray[count] = new BigInteger(cleaned, 16);
 			}
 			else {
 				bigArray[count] = new BigInteger(s);
