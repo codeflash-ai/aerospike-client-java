@@ -78,22 +78,34 @@ public final class LuaMap extends LuaUserdata implements LuaData {
 	}
 
 	public LuaMap merge(LuaMap map2, LuaFunction func) {
-		HashMap<LuaValue,LuaValue> target = new HashMap<LuaValue,LuaValue>(map.size() + map2.map.size());
-		target.putAll(map);
+		// Cache references to avoid repeated field access
+		final Map<LuaValue,LuaValue> m1 = this.map;
+		final Map<LuaValue,LuaValue> m2 = map2.map;
+
+		// Precompute capacity to avoid rehashing (assumes default load factor 0.75)
+		int expected = m1.size() + m2.size();
+		int capacity = (int)(expected / 0.75f) + 1;
+		HashMap<LuaValue,LuaValue> target = new HashMap<LuaValue,LuaValue>(capacity);
+		target.putAll(m1);
 
 		boolean hasFunc = !(func == null || func.isnil());
 
-		for (Entry<LuaValue,LuaValue> entry : map2.map.entrySet()) {
-			if (hasFunc) {
-				LuaValue value = map.get(entry.getKey());
+		if (!hasFunc) {
+			// Fast path: no merge function -> copy remaining entries in bulk
+			target.putAll(m2);
+		}
+		else {
+			for (Entry<LuaValue,LuaValue> entry : m2.entrySet()) {
+				LuaValue key = entry.getKey();
+				LuaValue value = m1.get(key);
 
 				if (value != null) {
 					Varargs ret = func.invoke(value, entry.getValue());
-					target.put(entry.getKey(), (LuaValue)ret);
+					target.put(key, (LuaValue)ret);
 					continue;
 				}
+				target.put(key, entry.getValue());
 			}
-			target.put(entry.getKey(), entry.getValue());
 		}
 		return new LuaMap(instance, target);
 	}
