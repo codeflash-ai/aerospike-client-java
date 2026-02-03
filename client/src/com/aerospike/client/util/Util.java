@@ -133,7 +133,7 @@ public final class Util {
 			else if (s.indexOf(':') >= 0) {
 				// Some certificates show serial numbers in hex pairs delimited by colons.
 				// Remove those colons before converting to BigInteger.
-				s = s.replaceAll(":", "");
+				s = s.replace(":", "");
 				bigArray[count] = new BigInteger(s, 16);
 			}
 			else {
