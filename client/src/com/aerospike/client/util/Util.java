@@ -41,6 +41,11 @@ import javax.management.ObjectName;
 import com.aerospike.client.AerospikeException;
 
 public final class Util {
+    private static final ThreadLocal<StringWriter> stringWriterTL =
+    		ThreadLocal.withInitial(() -> new StringWriter(2048));
+    private static final ThreadLocal<PrintWriter> printWriterTL =
+    		ThreadLocal.withInitial(() -> new PrintWriter(stringWriterTL.get()));
+
 	public static void sleep(long millis) {
 		try {
 			Thread.sleep(millis);
@@ -66,9 +71,15 @@ public final class Util {
 	}
 
 	public static String getStackTrace(Throwable e) {
-		StringWriter sw = new StringWriter(1000);
-		PrintWriter pw = new PrintWriter(sw);
+		StringWriter sw = stringWriterTL.get();
+		// Reset the buffer without creating a new StringWriter.
+		sw.getBuffer().setLength(0);
+		PrintWriter pw = printWriterTL.get();
+		// Ensure any previous state is flushed before writing.
+		pw.flush();
 		e.printStackTrace(pw);
+		// Ensure the stack trace is written into the StringWriter's buffer.
+		pw.flush();
 		return sw.toString();
 	}
 
