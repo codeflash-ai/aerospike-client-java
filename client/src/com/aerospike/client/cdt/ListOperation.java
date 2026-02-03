@@ -133,17 +133,21 @@ public class ListOperation {
 	}
 
 	private static byte[] packCreate(ListOrder order, boolean pad, CTX[] ctx) {
-		Packer packer = new Packer();
+		final Packer packer = new Packer();
+
+		// Cache frequently used values to avoid repeated virtual calls/field access.
+		final int flag = order.getFlag(pad);
+		final int attributes = order.attributes;
 
 		// Calculate buffer size.
-		CDT.init(packer, ctx, SET_TYPE, 1, order.getFlag(pad));
-		packer.packInt(order.attributes);
+		CDT.init(packer, ctx, SET_TYPE, 1, flag);
+		packer.packInt(attributes);
 
 		packer.createBuffer();
 
 		// Write to buffer.
-		CDT.init(packer, ctx, SET_TYPE, 1, order.getFlag(pad));
-		packer.packInt(order.attributes);
+		CDT.init(packer, ctx, SET_TYPE, 1, flag);
+		packer.packInt(attributes);
 
 		return packer.getBuffer();
 	}
