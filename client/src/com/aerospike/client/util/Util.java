@@ -41,6 +41,9 @@ import javax.management.ObjectName;
 import com.aerospike.client.AerospikeException;
 
 public final class Util {
+    private static final ThreadLocal<java.util.HashMap<String, SimpleDateFormat>> SDF_CACHE =
+    		ThreadLocal.withInitial(() -> new java.util.HashMap<String, SimpleDateFormat>());
+
 	public static void sleep(long millis) {
 		try {
 			Thread.sleep(millis);
@@ -158,7 +161,17 @@ public final class Util {
 	 * Convert a string to a time stamp using a string pattern.
 	 */
 	public static long toTimeStamp(String dateTime, String pattern, int timeZoneOffset) throws ParseException {
-		SimpleDateFormat format = new SimpleDateFormat(pattern);
+		java.util.HashMap<String, SimpleDateFormat> map = SDF_CACHE.get();
+		SimpleDateFormat proto = map.get(pattern);
+
+		if (proto == null) {
+			proto = new SimpleDateFormat(pattern);
+			map.put(pattern, proto);
+		}
+
+		// Clone prototype to ensure each call receives a fresh SimpleDateFormat
+		// (preserves semantics of original implementation which constructed a new instance).
+		SimpleDateFormat format = (SimpleDateFormat) proto.clone();
 		return toTimeStamp(dateTime, format, timeZoneOffset);
 	}
 
