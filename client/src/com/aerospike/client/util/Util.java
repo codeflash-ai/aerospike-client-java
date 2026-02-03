@@ -216,7 +216,7 @@ public final class Util {
 	 */
 	public static boolean toBoolean(Object obj) {
 		// The server always returns booleans as longs, so get long and convert.
-		return (toLong(obj) != 0) ? true : false;
+		return (obj == null) ? false : ((Long)obj).longValue() != 0L;
 	}
 
 	/**
