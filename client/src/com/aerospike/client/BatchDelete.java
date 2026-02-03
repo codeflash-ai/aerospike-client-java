@@ -26,6 +26,8 @@ import com.aerospike.client.policy.Policy;
  * Batch delete operation.
  */
 public final class BatchDelete extends BatchRecord {
+    private static final Type TYPE = Type.BATCH_DELETE;
+
 	/**
 	 * Optional delete policy.
 	 */
@@ -52,7 +54,7 @@ public final class BatchDelete extends BatchRecord {
 	 */
 	@Override
 	public Type getType() {
-		return Type.BATCH_DELETE;
+		return TYPE;
 	}
 
 	/**
