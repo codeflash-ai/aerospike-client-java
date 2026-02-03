@@ -148,10 +148,8 @@ public final class Util {
 	 * Convert a string to a time stamp using the same algorithm as the Aerospike loader.
 	 */
 	public static long toTimeStamp(String dateTime, SimpleDateFormat format, int timeZoneOffset) throws ParseException {
-		Date formatDate = format.parse(dateTime);
-		long miliSecondForDate = formatDate.getTime()
-				- timeZoneOffset;
-		return miliSecondForDate / 1000;
+		long millis = format.parse(dateTime).getTime();
+		return (millis - timeZoneOffset) / 1000L;
 	}
 
 	/**
