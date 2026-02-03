@@ -256,16 +256,33 @@ public final class Util {
 			return false;
 		}
 
-		if (racks1.size() != racks2.length) {
+		int size1 = racks1.size();
+		int size2 = racks2.length;
+		if (size1 != size2) {
 			return false;
 		}
 
-		for (int i = 0; i < racks2.length; i++) {
-			int r1 = racks1.get(i);
-			int r2 = racks2[i];
+		// Use indexed access for RandomAccess lists (ArrayList), iterator for others (LinkedList)
+		if (racks1 instanceof java.util.RandomAccess) {
+			for (int i = 0; i < size2; i++) {
+				int r1 = racks1.get(i);
+				int r2 = racks2[i];
 
-			if (r1 != r2) {
-				return false;
+				if (r1 != r2) {
+					return false;
+				}
+			}
+		}
+		else {
+			java.util.Iterator<Integer> it = racks1.iterator();
+			int i = 0;
+			while (it.hasNext()) {
+				int r1 = it.next();
+				int r2 = racks2[i++];
+
+				if (r1 != r2) {
+					return false;
+				}
 			}
 		}
 		return true;
