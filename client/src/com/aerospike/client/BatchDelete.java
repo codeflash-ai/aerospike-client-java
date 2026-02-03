@@ -69,16 +69,20 @@ public final class BatchDelete extends BatchRecord {
 			return false;
 		}
 
-		boolean sendkey = false;
-		if (policy != null) {
-			sendkey = policy.sendKey;
-		}
+		// Cache local reference to avoid repeated field access.
+		BatchDeletePolicy localPolicy = policy;
+
+		// If configuration provider supplies an explicit override, use it directly.
 		if (configProvider != null) {
 			Configuration config = configProvider.fetchConfiguration();
 			if (config != null && config.hasDBDCsendKey()) {
-				sendkey = config.dynamicConfiguration.dynamicBatchDeleteConfig.sendKey.value;
+				boolean sendkey = config.dynamicConfiguration.dynamicBatchDeleteConfig.sendKey.value;
+				return !sendkey;
 			}
 		}
+
+		// Otherwise, fall back to policy setting (default false when policy is null).
+		boolean sendkey = (localPolicy != null) && localPolicy.sendKey;
 		return !sendkey;
 	}
 
