@@ -965,9 +965,14 @@ public abstract class Value {
 
 		@Override
 		public boolean equals(Object other) {
-			return (other != null &&
-				this.getClass().equals(other.getClass()) &&
-				this.value == ((LongValue)other).value);
+			if (this == other) {
+				return true;
+			}
+			if (other == null || other.getClass() != this.getClass()) {
+				return false;
+			}
+			LongValue lv = (LongValue) other;
+			return this.value == lv.value;
 		}
 
 		@Override
