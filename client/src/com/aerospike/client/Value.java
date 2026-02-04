@@ -705,6 +705,8 @@ public abstract class Value {
 	 * String value.
 	 */
 	public static final class StringValue extends Value {
+	    private volatile LuaValue cachedLuaValue;
+
 		private final String value;
 
 		public StringValue(String value) {
@@ -743,7 +745,12 @@ public abstract class Value {
 
 		@Override
 		public LuaValue getLuaValue(LuaInstance instance) {
-			return LuaString.valueOf(value);
+			LuaValue cached = cachedLuaValue;
+			if (cached == null) {
+				cached = LuaString.valueOf(value);
+				cachedLuaValue = cached;
+			}
+			return cached;
 		}
 
 		@Override
