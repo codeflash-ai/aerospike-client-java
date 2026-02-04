@@ -1139,6 +1139,9 @@ public abstract class Value {
 	 * Boolean value.
 	 */
 	public static final class BooleanValue extends Value {
+	    public static final BooleanValue TRUE = new BooleanValue(true);
+	    public static final BooleanValue FALSE = new BooleanValue(false);
+
 		private final boolean value;
 
 		public BooleanValue(boolean value) {
@@ -1207,7 +1210,21 @@ public abstract class Value {
 		public long toLong() {
 			return value? 1L : 0L;
 		}
-	}
+	
+	    /**
+	    		 * Return the primitive boolean held by this Value.
+	    		 */
+	    		public boolean getValue() {
+	    			return value;
+	    		}
+	    /**
+	    		 * Factory method that returns a cached instance for true/false.
+	    		 * This improves performance by reducing object allocations in hot paths.
+	    		 */
+	    		public static BooleanValue of(boolean v) {
+	    			return v ? TRUE : FALSE;
+	    		}
+}
 
 	/**
 	 * Boolean value that converts to integer when sending a bin to the server.
