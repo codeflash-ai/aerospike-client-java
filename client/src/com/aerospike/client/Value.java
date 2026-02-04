@@ -675,7 +675,7 @@ public abstract class Value {
 
 		@Override
 		public String toString() {
-			return Integer.toString(value & 0xff);
+			return Integer.toString(Byte.toUnsignedInt(value));
 		}
 
 		@Override
