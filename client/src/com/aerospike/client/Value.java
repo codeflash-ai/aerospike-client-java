@@ -828,7 +828,7 @@ public abstract class Value {
 		}
 
 		@Override
-		public int toInteger() {
+		public final int toInteger() {
 			return value;
 		}
 
