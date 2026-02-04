@@ -1065,6 +1065,8 @@ public abstract class Value {
 	 * Float value.
 	 */
 	public static final class FloatValue extends Value {
+	    private volatile String cachedString;
+
 		private final float value;
 
 		public FloatValue(float value) {
@@ -1109,7 +1111,12 @@ public abstract class Value {
 
 		@Override
 		public String toString() {
-			return Float.toString(value);
+		String s = cachedString;
+		if (s == null) {
+		s = Float.toString(value);
+		cachedString = s;
+		}
+			return s;
 		}
 
 		@Override
