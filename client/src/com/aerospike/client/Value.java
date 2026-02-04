@@ -842,6 +842,8 @@ public abstract class Value {
 	 * Integer value.
 	 */
 	public static final class IntegerValue extends Value {
+	    private transient volatile String stringValue;
+
 		private final int value;
 
 		public IntegerValue(int value) {
@@ -886,7 +888,12 @@ public abstract class Value {
 
 		@Override
 		public String toString() {
-			return Integer.toString(value);
+			String s = stringValue;
+			if (s == null) {
+				s = Integer.toString(value);
+				stringValue = s;
+			}
+			return s;
 		}
 
 		@Override
