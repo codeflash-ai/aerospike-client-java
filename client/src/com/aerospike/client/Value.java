@@ -1046,8 +1046,7 @@ public abstract class Value {
 
 		@Override
 		public int hashCode() {
-			long bits = Double.doubleToLongBits(value);
-			return (int)(bits ^ (bits >>> 32));
+			return Double.hashCode(value);
 		}
 
 		@Override
