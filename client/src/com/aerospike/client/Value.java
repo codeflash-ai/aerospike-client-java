@@ -446,7 +446,8 @@ public abstract class Value {
 			if (other == null) {
 				return true;
 			}
-			return this.getClass().equals(other.getClass());
+			// Use direct class reference comparison instead of reflective equals call for performance.
+			return other.getClass() == NullValue.class;
 		}
 
 		@Override
