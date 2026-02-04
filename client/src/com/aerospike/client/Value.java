@@ -817,9 +817,13 @@ public abstract class Value {
 
 		@Override
 		public boolean equals(Object other) {
-			return (other != null &&
-				this.getClass().equals(other.getClass()) &&
-				this.value == ((ShortValue)other).value);
+			if (this == other) {
+				return true;
+			}
+			if (other == null || other.getClass() != ShortValue.class) {
+				return false;
+			}
+			return this.value == ((ShortValue) other).value;
 		}
 
 		@Override
