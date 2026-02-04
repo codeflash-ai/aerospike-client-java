@@ -1126,7 +1126,7 @@ public abstract class Value {
 
 		@Override
 		public int toInteger() {
-			return (int)value;
+			return (int) value;
 		}
 
 		@Override
