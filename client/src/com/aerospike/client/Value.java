@@ -680,9 +680,13 @@ public abstract class Value {
 
 		@Override
 		public boolean equals(Object other) {
-			return (other != null &&
-				this.getClass().equals(other.getClass()) &&
-				this.value == ((ByteValue)other).value);
+			if (this == other) {
+				return true;
+			}
+			if (!(other instanceof ByteValue)) {
+				return false;
+			}
+			return this.value == ((ByteValue) other).value;
 		}
 
 		@Override
