@@ -482,28 +482,14 @@ public final class ListExp {
 	private static Exp.Type getValueType(int returnType) {
 		int t = returnType & ~ListReturnType.INVERTED;
 
-		switch (t) {
-		case ListReturnType.INDEX:
-		case ListReturnType.REVERSE_INDEX:
-		case ListReturnType.RANK:
-		case ListReturnType.REVERSE_RANK:
-			// This method only called from expressions that can return multiple integers (ie list).
-			return Exp.Type.LIST;
-
-		case ListReturnType.COUNT:
-			return Exp.Type.INT;
-
-		case ListReturnType.VALUE:
-			// This method only called from expressions that can return multiple objects (ie list).
-			return Exp.Type.LIST;
-
-		case ListReturnType.EXISTS:
-			return Exp.Type.BOOL;
-
-		default:
-		case ListReturnType.NONE:
-			throw new AerospikeException("Invalid ListReturnType: " + returnType);
-		}
+		return switch (t) {
+			case ListReturnType.INDEX, ListReturnType.REVERSE_INDEX, 
+				 ListReturnType.RANK, ListReturnType.REVERSE_RANK, 
+				 ListReturnType.VALUE -> Exp.Type.LIST;
+			case ListReturnType.COUNT -> Exp.Type.INT;
+			case ListReturnType.EXISTS -> Exp.Type.BOOL;
+			default -> throw new AerospikeException("Invalid ListReturnType: " + returnType);
+		};
 	}
 
 	protected static byte[] packRangeOperation(int command, int returnType, Exp begin, Exp end, CTX[] ctx) {
