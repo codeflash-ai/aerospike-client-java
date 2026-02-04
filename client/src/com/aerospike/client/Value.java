@@ -697,7 +697,7 @@ public abstract class Value {
 
 		@Override
 		public long toLong() {
-			return value & 0xff;
+			return value & 0xFFL;
 		}
 	}
 
