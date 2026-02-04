@@ -27,6 +27,8 @@ import com.aerospike.client.query.PartitionTracker;
 import com.aerospike.client.query.PartitionTracker.NodePartitions;
 
 public final class ScanPartitionCommand extends MultiCommand {
+    private static final LatencyType LATENCY_TYPE = LatencyType.QUERY;
+
 	private final ScanPolicy scanPolicy;
 	private final String setName;
 	private final String[] binNames;
@@ -70,7 +72,7 @@ public final class ScanPartitionCommand extends MultiCommand {
 
 	@Override
 	protected LatencyType getLatencyType() {
-		return LatencyType.QUERY;
+		return LATENCY_TYPE;
 	}
 
 	@Override
