@@ -81,7 +81,11 @@ public final class Host {
 		}
 		Host other = (Host) obj;
 		// Ignore tlsName in default equality comparison.
-		return this.name.equals(other.name) && this.port == other.port;
+		// Compare primitive port first to avoid unnecessary string equals calls.
+		if (this.port != other.port) {
+			return false;
+		}
+		return this.name.equals(other.name);
 	}
 
 	/**
