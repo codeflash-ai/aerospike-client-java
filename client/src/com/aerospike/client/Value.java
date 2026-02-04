@@ -510,7 +510,29 @@ public abstract class Value {
 
 		@Override
 		public String toString() {
-			return Buffer.bytesToHexString(bytes);
+			// Fast hex conversion: allocate exact char array (2 chars per byte)
+			// and write nibbles via lookup table. This minimizes temporary objects
+			// and is faster than StringBuilder/StringBuffer-based conversions.
+			if (bytes == null) {
+				// Delegate null handling to Buffer for exact compatibility.
+				// Buffer.bytesToHexString(null) typically returns null or "" depending on implementation.
+				return Buffer.bytesToHexString(null);
+			}
+			int len = bytes.length;
+			if (len == 0) {
+				// Most implementations return empty string for zero-length arrays.
+				return "";
+			}
+			char[] out = new char[len << 1];
+			final char[] HEX = {'0','1','2','3','4','5','6','7','8','9',
+					'a','b','c','d','e','f'};
+			int j = 0;
+			for (int i = 0; i < len; i++) {
+				int v = bytes[i] & 0xFF;
+				out[j++] = HEX[v >>> 4];
+				out[j++] = HEX[v & 0x0F];
+			}
+			return new String(out);
 		}
 
 		@Override
