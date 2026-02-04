@@ -23,6 +23,8 @@ import org.luaj.vm2.LuaValue;
 import com.aerospike.client.query.ResultSet;
 
 public final class LuaOutputStream extends LuaUserdata implements LuaStream {
+    private static final LuaString CACHED_LUA_STRING = LuaString.valueOf(LuaOutputStream.class.getName());
+
 
 	private final ResultSet resultSet;
 
@@ -57,6 +59,6 @@ public final class LuaOutputStream extends LuaUserdata implements LuaStream {
 
 	@Override
 	public LuaValue toLuaString() {
-		return LuaString.valueOf(LuaOutputStream.class.getName());
+		return CACHED_LUA_STRING;
 	}
 }
