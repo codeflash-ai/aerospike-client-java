@@ -990,6 +990,8 @@ public abstract class Value {
 	 * Double value.
 	 */
 	public static final class DoubleValue extends Value {
+	    private static final int TYPE = ParticleType.DOUBLE;
+
 		private final double value;
 
 		public DoubleValue(double value) {
@@ -1019,7 +1021,7 @@ public abstract class Value {
 
 		@Override
 		public int getType() {
-			return ParticleType.DOUBLE;
+			return TYPE;
 		}
 
 		@Override
