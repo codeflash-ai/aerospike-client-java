@@ -897,7 +897,7 @@ public abstract class Value {
 		}
 
 		@Override
-		public int hashCode() {
+		public final int hashCode() {
 			return value;
 		}
 
