@@ -753,9 +753,21 @@ public abstract class Value {
 
 		@Override
 		public boolean equals(Object other) {
-			return (other != null &&
-				this.getClass().equals(other.getClass()) &&
-				this.value.equals(((StringValue)other).value));
+			// Fast path: same reference
+			if (this == other) {
+				return true;
+			}
+			// Null check
+			if (other == null) {
+				return false;
+			}
+			// Ensure exact same runtime class (preserve original semantics)
+			if (this.getClass() != other.getClass()) {
+				return false;
+			}
+			// Safe cast and value comparison
+			StringValue o = (StringValue) other;
+			return this.value.equals(o.value);
 		}
 
 		@Override
