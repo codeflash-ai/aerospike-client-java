@@ -630,6 +630,8 @@ public abstract class Value {
 	 * Byte value.
 	 */
 	public static final class ByteValue extends Value {
+	    private static final int TYPE = ParticleType.INTEGER;
+
 		private final byte value;
 
 		public ByteValue(byte value) {
@@ -660,7 +662,7 @@ public abstract class Value {
 		@Override
 		public int getType() {
 			// The server does not natively handle one byte, so store as long (8 byte integer).
-			return ParticleType.INTEGER;
+			return TYPE;
 		}
 
 		@Override
