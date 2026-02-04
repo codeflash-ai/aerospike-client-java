@@ -718,7 +718,36 @@ public abstract class Value {
 
 		@Override
 		public int estimateSize() {
-			return Buffer.estimateSizeUtf8(value);
+			// Preserve original behavior for null by delegating to Buffer.
+			if (value == null) {
+				return Buffer.estimateSizeUtf8(null);
+			}
+
+			int utf8Len = 0;
+			int strLen = value.length();
+
+			for (int i = 0; i < strLen; i++) {
+				char c = value.charAt(i);
+
+				if (c <= 0x007F) {
+					// 1 byte: U+0000..U+007F
+					utf8Len += 1;
+				}
+				else if (c <= 0x07FF) {
+					// 2 bytes: U+0080..U+07FF
+					utf8Len += 2;
+				}
+				else if (Character.isHighSurrogate(c) && (i + 1) < strLen && Character.isLowSurrogate(value.charAt(i + 1))) {
+					// Surrogate pair -> 4 bytes in UTF-8. Advance extra index.
+					utf8Len += 4;
+					i++; // Skip low surrogate
+				}
+				else {
+					// 3 bytes: U+0800..U+FFFF (excluding surrogate pairs handled above)
+					utf8Len += 3;
+				}
+			}
+			return utf8Len;
 		}
 
 		@Override
