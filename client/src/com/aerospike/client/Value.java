@@ -1290,6 +1290,8 @@ public abstract class Value {
 	 * GeoJSON value.
 	 */
 	public static final class GeoJSONValue extends Value {
+	    private Integer cachedHash = null;
+
 		private final String value;
 
 		public GeoJSONValue(String value) {
@@ -1348,7 +1350,14 @@ public abstract class Value {
 
 		@Override
 		public int hashCode() {
-			return value.hashCode();
+			Integer h = cachedHash;
+			if (h == null) {
+				// Compute and cache. If value is null, this will throw NPE here,
+				// matching original behavior of throwing when hashCode() is invoked.
+				h = Integer.valueOf(value.hashCode());
+				cachedHash = h;
+			}
+			return h.intValue();
 		}
 	}
 
