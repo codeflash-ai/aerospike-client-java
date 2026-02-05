@@ -1250,7 +1250,8 @@ public abstract class Value {
 
 		@Override
 		public Object getObject() {
-			return value;
+			// Use cached Boolean constants to avoid any autoboxing overhead.
+			return value ? Boolean.TRUE : Boolean.FALSE;
 		}
 
 		@Override
