@@ -1499,7 +1499,10 @@ public abstract class Value {
 
 		@Override
 		public int estimateSize() throws AerospikeException {
-			bytes = Packer.pack(list);
+			// Cache the packed bytes to avoid repeated packing/allocations on subsequent calls.
+			if (bytes == null) {
+				bytes = Packer.pack(list);
+			}
 			return bytes.length;
 		}
 
