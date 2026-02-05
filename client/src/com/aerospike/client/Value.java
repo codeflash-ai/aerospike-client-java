@@ -1541,9 +1541,16 @@ public abstract class Value {
 
 		@Override
 		public boolean equals(Object other) {
-			return (other != null &&
-				this.getClass().equals(other.getClass()) &&
-				this.list.equals(((ListValue)other).list));
+			// Preserve original semantics: return false if other is null, require exact same runtime class,
+			// and delegate equality to the wrapped list. Use reference equality for Class to avoid extra method call.
+			if (other == null) {
+				return false;
+			}
+			if (this.getClass() != other.getClass()) {
+				return false;
+			}
+			ListValue o = (ListValue) other;
+			return this.list.equals(o.list);
 		}
 
 		@Override
