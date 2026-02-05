@@ -1265,8 +1265,7 @@ public abstract class Value {
 
 		@Override
 		public boolean equals(Object other) {
-			return (other != null &&
-				this.getClass().equals(other.getClass()) &&
+			return (other instanceof BoolIntValue &&
 				this.value == ((BoolIntValue)other).value);
 		}
 
