@@ -1356,6 +1356,8 @@ public abstract class Value {
 	 * HyperLogLog value.
 	 */
 	public static final class HLLValue extends Value {
+	    private volatile LuaBytes cachedLuaValue;
+
 		private final byte[] bytes;
 
 		public HLLValue(byte[] bytes) {
@@ -1399,7 +1401,16 @@ public abstract class Value {
 
 		@Override
 		public LuaValue getLuaValue(LuaInstance instance) {
-			return new LuaBytes(instance, bytes);
+			LuaBytes result = cachedLuaValue;
+			if (result == null) {
+				synchronized (this) {
+					result = cachedLuaValue;
+					if (result == null) {
+						cachedLuaValue = result = new LuaBytes(instance, bytes);
+					}
+				}
+			}
+			return result;
 		}
 
 		@Override
