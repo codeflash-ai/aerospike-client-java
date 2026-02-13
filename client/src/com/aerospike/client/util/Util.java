@@ -39,6 +39,7 @@ import javax.management.MBeanServer;
 import javax.management.ObjectName;
 
 import com.aerospike.client.AerospikeException;
+import java.nio.file.Files;
 
 public final class Util {
 	public static void sleep(long millis) {
@@ -74,18 +75,7 @@ public final class Util {
 
 	public static byte[] readFile(File file) {
 		try {
-			byte[] bytes = new byte[(int)file.length()];
-
-			try (FileInputStream in = new FileInputStream(file)) {
-				int pos = 0;
-				int len = 0;
-
-				while (pos < bytes.length) {
-					len = in.read(bytes, pos, bytes.length - pos);
-					pos += len;
-				}
-				return bytes;
-			}
+			return Files.readAllBytes(file.toPath());
 		}
 		catch (Throwable e) {
 			throw new AerospikeException("Failed to read " + file.getAbsolutePath(), e);
