@@ -80,8 +80,22 @@ public final class Util {
 				int pos = 0;
 				int len = 0;
 
+				// Use FileChannel with a ByteBuffer wrapper to minimize JNI/syscall overhead
+				java.nio.channels.FileChannel fc = in.getChannel();
+				java.nio.ByteBuffer buf = java.nio.ByteBuffer.wrap(bytes);
+
+				// Fast-path for zero-length files
+				if (bytes.length == 0) {
+					return bytes;
+				}
+
 				while (pos < bytes.length) {
-					len = in.read(bytes, pos, bytes.length - pos);
+					len = fc.read(buf);
+					if (len < 0) {
+						// Unexpected EOF before filling the buffer.
+						// Throw EOFException to indicate incomplete read.
+						throw new EOFException();
+					}
 					pos += len;
 				}
 				return bytes;
