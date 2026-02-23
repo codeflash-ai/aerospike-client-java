@@ -36,8 +36,9 @@ public final class Crypto {
 		int keyLength = key.write(buffer, setLength + 1);
 
 		RipeMD160 hash = new RipeMD160();
-		hash.update(buffer, 0, setLength);
-		hash.update(buffer, setLength, keyLength + 1);
+		// Combine the two updates into a single update to reduce overhead.
+		int totalLength = setLength + 1 + keyLength;
+		hash.update(buffer, 0, totalLength);
 		return hash.digest();
 	}
 
