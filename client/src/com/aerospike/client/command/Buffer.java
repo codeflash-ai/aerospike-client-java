@@ -171,10 +171,7 @@ public final class Buffer {
 		if (s == null || s.length() == 0) {
 			return new byte[0];
 		}
-		int size = Utf8.encodedLength(s);
-		byte[] bytes = new byte[size];
-		stringToUtf8(s, bytes, 0);
-		return bytes;
+		return s.getBytes(StandardCharsets.UTF_8);
 	}
 
 	/**
