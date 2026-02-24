@@ -164,7 +164,8 @@ public final class Buffer {
 		if (s == null) {
 			return 0;
 		}
-		return s.length() * 3;
+		int len = s.length();
+		return (len << 1) + len;
 	}
 
 	public static byte[] stringToUtf8(String s) {
