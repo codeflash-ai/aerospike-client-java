@@ -71,11 +71,9 @@ public class Counter {
 	 * @return the total
 	 */
 	public long getTotal() {
-		AtomicLong total = new AtomicLong();
-		counterMap.forEach((k,v)-> {
-			total.getAndAdd(v.longValue());
-		});
-		return total.get();
+		return counterMap.values().stream()
+			.mapToLong(AtomicLong::get)
+			.sum();
 	}
 
 	/**
