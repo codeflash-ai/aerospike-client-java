@@ -708,49 +708,57 @@ public class AdminCommand {
 		int parseBlock(int receiveSize) {
 			super.dataOffset = 0;
 
-			while (super.dataOffset < receiveSize) {
-				int resultCode = super.dataBuffer[super.dataOffset + 1] & 0xFF;
+			// Cache fields locally to minimize repeated field access in hot loop.
+			final byte[] dataBuffer = super.dataBuffer;
+			int offset = super.dataOffset;
+
+			while (offset < receiveSize) {
+				int resultCode = dataBuffer[offset + 1] & 0xFF;
 
 				if (resultCode != 0) {
+					// Preserve original behavior: return immediately without changing super.dataOffset.
 					return resultCode;
 				}
 
 				Role role = new Role();
-				int fieldCount = super.dataBuffer[super.dataOffset + 3] & 0xFF;
-				super.dataOffset += HEADER_REMAINING;
+				int fieldCount = dataBuffer[offset + 3] & 0xFF;
+				offset += HEADER_REMAINING;
 
 				for (int i = 0; i < fieldCount; i++) {
-					int len = Buffer.bytesToInt(super.dataBuffer, super.dataOffset);
-					super.dataOffset += 4;
-					int id = super.dataBuffer[super.dataOffset++] & 0xFF;
+					int len = Buffer.bytesToInt(dataBuffer, offset);
+					offset += 4;
+					int id = dataBuffer[offset++] & 0xFF;
 					len--;
 
 					switch (id) {
 					case ROLE:
-						role.name = Buffer.utf8ToString(super.dataBuffer, super.dataOffset, len);
-						super.dataOffset += len;
+						role.name = Buffer.utf8ToString(dataBuffer, offset, len);
+						offset += len;
 						break;
 
 					case PRIVILEGES:
-						parsePrivileges(role);
+						// Use helper that operates on local buffer/offset and returns new offset.
+						offset = parsePrivilegesLocal(role, dataBuffer, offset);
 						break;
 
 					case WHITELIST:
-						role.whitelist = parseWhitelist(len);
+						// Parse whitelist from local buffer without mutating super.dataOffset.
+						role.whitelist = parseWhitelistFromBuffer(dataBuffer, offset, len);
+						offset += len;
 						break;
 
 					case READ_QUOTA:
-						role.readQuota = Buffer.bytesToInt(super.dataBuffer, super.dataOffset);
-						super.dataOffset += len;
+						role.readQuota = Buffer.bytesToInt(dataBuffer, offset);
+						offset += len;
 						break;
 
 					case WRITE_QUOTA:
-						role.writeQuota = Buffer.bytesToInt(super.dataBuffer, super.dataOffset);
-						super.dataOffset += len;
+						role.writeQuota = Buffer.bytesToInt(dataBuffer, offset);
+						offset += len;
 						break;
 
 					default:
-						super.dataOffset += len;
+						offset += len;
 						break;
 					}
 				}
@@ -769,6 +777,9 @@ public class AdminCommand {
 
 				list.add(role);
 			}
+
+			// Write back final offset to the superclass field to preserve behavior.
+			super.dataOffset = offset;
 			return 0;
 		}
 
@@ -821,5 +832,56 @@ public class AdminCommand {
 			}
 			return list;
 		}
-	}
+	
+	    private int parsePrivilegesLocal(Role role, byte[] buffer, int offset) {
+	    			int size = buffer[offset++] & 0xFF;
+	    			role.privileges = new ArrayList<Privilege>(size);
+
+	    			for (int i = 0; i < size; i++) {
+	    				Privilege priv = new Privilege();
+	    				priv.code = PrivilegeCode.fromId(buffer[offset++] & 0xFF);
+
+	    				if (priv.code.canScope()) {
+	    					int len = buffer[offset++] & 0xFF;
+	    					priv.namespace = Buffer.utf8ToString(buffer, offset, len);
+	    					offset += len;
+
+	    					len = buffer[offset++] & 0xFF;
+	    					priv.setName = Buffer.utf8ToString(buffer, offset, len);
+	    					offset += len;
+	    				}
+	    				role.privileges.add(priv);
+	    			}
+	    			return offset;
+	    		}
+
+	    private List<String> parseWhitelistFromBuffer(byte[] buffer, int begin, int len) {
+	    			ArrayList<String> list = new ArrayList<String>();
+	    			int offset = begin;
+	    			int max = begin + len;
+	    			int start = offset;
+
+	    			while (offset < max) {
+	    				if (buffer[offset] == ',') {
+	    					int l = offset - start;
+	    					if (l > 0) {
+	    						String s = Buffer.utf8ToString(buffer, start, l);
+	    						list.add(s);
+	    					}
+	    					offset++;
+	    					start = offset;
+	    				}
+	    				else {
+	    					offset++;
+	    				}
+	    			}
+	    			int l = offset - start;
+	    			if (l > 0) {
+	    				String s = Buffer.utf8ToString(buffer, start, l);
+	    				list.add(s);
+	    			}
+	    			return list;
+	    		}
+
+}
 }
