@@ -599,50 +599,62 @@ public class AdminCommand {
 		@Override
 		int parseBlock(int receiveSize)
 		{
+			// Cache super fields locally to reduce repeated field access in hot loop.
+			byte[] buf = super.dataBuffer;
+			int off = 0; // super.dataOffset is set to 0 originally in the method.
 			super.dataOffset = 0;
 
-			while (super.dataOffset < receiveSize) {
-				int resultCode = super.dataBuffer[super.dataOffset + 1] & 0xFF;
+			while (off < receiveSize) {
+				int resultCode = buf[off + 1] & 0xFF;
 
 				if (resultCode != 0) {
+					// Preserve original behavior: return immediately without changing super.dataOffset further.
 					return resultCode;
 				}
 
 				User user = new User();
-				int fieldCount = super.dataBuffer[super.dataOffset + 3] & 0xFF;
-				super.dataOffset += HEADER_REMAINING;
+				int fieldCount = buf[off + 3] & 0xFF;
+				off += HEADER_REMAINING;
 
 				for (int i = 0; i < fieldCount; i++) {
-					int len = Buffer.bytesToInt(super.dataBuffer, super.dataOffset);
-					super.dataOffset += 4;
-					int id = super.dataBuffer[super.dataOffset++] & 0xFF;
+					int len = Buffer.bytesToInt(buf, off);
+					off += 4;
+					int id = buf[off++] & 0xFF;
 					len--;
 
 					switch (id) {
 					case USER:
-						user.name = Buffer.utf8ToString(super.dataBuffer, super.dataOffset, len);
-						super.dataOffset += len;
+						user.name = Buffer.utf8ToString(buf, off, len);
+						off += len;
 						break;
 
 					case ROLES:
+						// parseRoles updates super.dataOffset, so call it and then sync local offset.
+						super.dataOffset = off;
 						parseRoles(user);
+						off = super.dataOffset;
 						break;
 
 					case READ_INFO:
+						// parseInfo updates super.dataOffset and returns list; sync local offset after call.
+						super.dataOffset = off;
 						user.readInfo = parseInfo();
+						off = super.dataOffset;
 						break;
 
 					case WRITE_INFO:
+						super.dataOffset = off;
 						user.writeInfo = parseInfo();
+						off = super.dataOffset;
 						break;
 
 					case CONNECTIONS:
-						user.connsInUse = Buffer.bytesToInt(super.dataBuffer, super.dataOffset);
-						super.dataOffset += len;
+						user.connsInUse = Buffer.bytesToInt(buf, off);
+						off += len;
 						break;
 
 					default:
-						super.dataOffset += len;
+						off += len;
 						break;
 					}
 				}
@@ -656,6 +668,8 @@ public class AdminCommand {
 				}
 				list.add(user);
 			}
+			// Write final offset back to the object field.
+			super.dataOffset = off;
 			return 0;
 		}
 
