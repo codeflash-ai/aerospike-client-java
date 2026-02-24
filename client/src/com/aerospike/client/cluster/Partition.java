@@ -355,6 +355,11 @@ public final class Partition {
 			return false;
 		}
 		Partition other = (Partition) obj;
-		return this.namespace.equals(other.namespace) && this.partitionId == other.partitionId;
+		// Compare primitive first to quickly rule out inequality without invoking String.equals.
+		if (this.partitionId != other.partitionId) {
+			return false;
+		}
+		// Fast-path reference equality before expensive String.equals.
+		return this.namespace == other.namespace || this.namespace.equals(other.namespace);
 	}
 }
