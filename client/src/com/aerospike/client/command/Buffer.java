@@ -319,7 +319,7 @@ public final class Buffer {
 		if (len <= 0) {
 			return false;
 		}
-		return (buf[offset] == 0)? false : true;
+		return buf[offset] != 0;
 	}
 
 	//-------------------------------------------------------
