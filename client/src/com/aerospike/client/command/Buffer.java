@@ -151,7 +151,7 @@ public final class Buffer {
 	 * Estimate size of Utf8 encoded bytes without performing the actual encoding.
 	 */
 	public static int estimateSizeUtf8(String s) {
-		if (s == null || s.length() == 0) {
+		if (s == null) {
 			return 0;
 		}
 		return Utf8.encodedLength(s);
