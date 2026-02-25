@@ -587,6 +587,10 @@ public abstract class Value {
 				return false;
 			}
 
+			if (this == obj) {
+				return true;
+			}
+
 			if (! this.getClass().equals(obj.getClass())) {
 				return false;
 			}
@@ -596,12 +600,12 @@ public abstract class Value {
 				return false;
 			}
 
-			for (int i = 0; i < length; i++) {
-				if (this.bytes[this.offset + i] != other.bytes[other.offset + i]) {
-					return false;
-				}
-			}
-			return true;
+			// Use native array mismatch for efficient comparison of subranges.
+			int aFrom = this.offset;
+			int aTo = this.offset + this.length;
+			int bFrom = other.offset;
+			int bTo = other.offset + other.length;
+			return Arrays.mismatch(this.bytes, aFrom, aTo, other.bytes, bFrom, bTo) == -1;
 		}
 
 		@Override
