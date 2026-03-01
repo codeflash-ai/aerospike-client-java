@@ -39,7 +39,9 @@ public final class Peers {
 	}
 
 	public boolean hasFailed(Host host) {
-		return invalidHosts.contains(host);
+		// Fast path: avoid hashing/equals work when set is empty.
+		HashSet<Host> set = invalidHosts;
+		return !set.isEmpty() && set.contains(host);
 	}
 
 	public void fail(Host host) {
