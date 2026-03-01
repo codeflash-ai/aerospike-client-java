@@ -191,22 +191,27 @@ public final class Buffer {
 		}
 		int length = s.length();
 		int startOffset = offset;
+		// Local reference to avoid repeated local var access in hot loop.
+		final byte[] out = buf;
 
-		for (int i = 0; i < length; i++) {
+		int i = 0;
+		while (i < length) {
 			int c = s.charAt(i);
 			if (c < 0x80) {
-				buf[offset++] = (byte) c;
+				out[offset++] = (byte) c;
+				i++;
+				continue;
 			}
-			else if (c < 0x800) {
-				buf[offset++] = (byte)(0xc0 | ((c >> 6)));
-				buf[offset++] = (byte)(0x80 | (c & 0x3f));
+			if (c < 0x800) {
+				out[offset++] = (byte) (0xc0 | (c >> 6));
+				out[offset++] = (byte) (0x80 | (c & 0x3f));
+				i++;
+				continue;
 			}
-			else {
-				// Encountered a different encoding other than 2-byte UTF8. Let java handle it.
-				byte[] value = s.getBytes(StandardCharsets.UTF_8);
-				System.arraycopy(value, 0, buf, startOffset, value.length);
-				return value.length;
-			}
+			// Encountered a different encoding other than 2-byte UTF8. Let java handle it.
+			byte[] value = s.getBytes(StandardCharsets.UTF_8);
+			System.arraycopy(value, 0, out, startOffset, value.length);
+			return value.length;
 		}
 		return offset - startOffset;
 	}
