@@ -203,8 +203,7 @@ public final class HLLExp {
 	 * }</pre>
 	 */
 	public static Exp getSimilarity(Exp list, Exp bin) {
-		byte[] bytes = Pack.pack(SIMILARITY, list);
-		return addRead(bin, bytes, Exp.Type.FLOAT);
+		return addRead(bin, Pack.pack(SIMILARITY, list), Exp.Type.FLOAT);
 	}
 
 	/**
