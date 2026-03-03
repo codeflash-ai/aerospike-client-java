@@ -154,7 +154,17 @@ public final class Buffer {
 		if (s == null || s.length() == 0) {
 			return 0;
 		}
-		return Utf8.encodedLength(s);
+
+		// Fast path: if all characters are ASCII (<= 0x7F), UTF-8 length == string length.
+		// This avoids the heavier computation in Utf8.encodedLength for the common ASCII case.
+		int len = s.length();
+		for (int i = 0; i < len; i++) {
+			if (s.charAt(i) > 0x7F) {
+				// Fallback to full calculation for non-ASCII characters (handles multi-byte and surrogates).
+				return Utf8.encodedLength(s);
+			}
+		}
+		return len;
 	}
 
 	/**
