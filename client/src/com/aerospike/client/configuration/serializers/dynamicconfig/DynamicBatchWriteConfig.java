@@ -78,7 +78,10 @@ public class DynamicBatchWriteConfig {
 
     public IntProperty getTotalTimeout() { return totalTimeout; }
 
-    public IntProperty getMaxRetries() { return maxRetries; }
+    public IntProperty getMaxRetries() { 
+        IntProperty result = maxRetries;
+        return result;
+    }
 
     public BooleanProperty getDurableDelete() { return durableDelete; }
 
