@@ -67,7 +67,10 @@ public class DynamicReadConfig {
 
     public BooleanProperty getFailOnFilteredOut() { return failOnFilteredOut; }
 
-    public Replica getReplica() { return replica; }
+    public Replica getReplica() { 
+        Replica r = this.replica;
+        return r;
+    }
 
     public IntProperty getSleepBetweenRetries() { return sleepBetweenRetries; }
 
