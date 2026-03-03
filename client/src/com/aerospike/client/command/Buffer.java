@@ -304,8 +304,7 @@ public final class Buffer {
 			negative = true;
 			buf[offset] &= 0x7f;
 		}
-		byte[] bytes = new byte[len];
-		System.arraycopy(buf, offset, bytes, 0, len);
+		byte[] bytes = Arrays.copyOfRange(buf, offset, offset + len);
 
 		BigInteger big = new BigInteger(bytes);
 
