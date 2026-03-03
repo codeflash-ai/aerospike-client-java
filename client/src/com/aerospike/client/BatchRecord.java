@@ -120,6 +120,7 @@ public class BatchRecord {
 	 * Return batch command type. For internal use only.
 	 */
 	public Type getType() {
+		// Return null directly to avoid any extra computation or allocations.
 		return null;
 	}
 
