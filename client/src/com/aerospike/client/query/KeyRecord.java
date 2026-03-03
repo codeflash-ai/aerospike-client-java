@@ -64,8 +64,24 @@ public final class KeyRecord {
 			return false;
 		}
 		KeyRecord that = (KeyRecord) obj;
-		return Objects.equals(key, that.key) &&
-				Objects.equals(record, that.record);
+
+		// Fast path: reference equality
+		if (key != that.key) {
+			// If keys are not the same reference, do null-safe equals check
+			if (key == null || !key.equals(that.key)) {
+				return false;
+			}
+		}
+
+		// Fast path: reference equality
+		if (record != that.record) {
+			// If records are not the same reference, do null-safe equals check
+			if (record == null || !record.equals(that.record)) {
+				return false;
+			}
+		}
+
+		return true;
 	}
 
 	/**
