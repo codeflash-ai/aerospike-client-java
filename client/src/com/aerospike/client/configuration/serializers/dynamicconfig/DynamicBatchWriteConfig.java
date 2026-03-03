@@ -66,7 +66,10 @@ public class DynamicBatchWriteConfig {
 
     public void setRespondAllKeys(BooleanProperty respondAllKeys) { this.respondAllKeys = respondAllKeys; }
 
-    public IntProperty getConnectTimeout() { return connectTimeout; }
+    public IntProperty getConnectTimeout() { 
+        IntProperty ct = connectTimeout;
+        return ct;
+    }
 
     public Replica getReplica() { return replica; }
 
