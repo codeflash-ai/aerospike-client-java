@@ -385,8 +385,7 @@ public class MapOperation {
 	 * Server removes map items identified by values and returns removed data specified by returnType (See {@link MapReturnType}).
 	 */
 	public static Operation removeByValueList(String binName, List<Value> values, int returnType, CTX... ctx) {
-		byte[] bytes = Pack.pack(MapOperation.REMOVE_BY_VALUE_LIST, returnType, values, ctx);
-		return new Operation(Operation.Type.MAP_MODIFY, binName, Value.get(bytes));
+		return new Operation(Operation.Type.MAP_MODIFY, binName, Value.get(Pack.pack(MapOperation.REMOVE_BY_VALUE_LIST, returnType, values, ctx)));
 	}
 
 	/**
