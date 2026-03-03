@@ -154,7 +154,46 @@ public final class Buffer {
 		if (s == null || s.length() == 0) {
 			return 0;
 		}
-		return Utf8.encodedLength(s);
+
+		int len = s.length();
+		int size = 0;
+
+		int i = 0;
+		while (i < len) {
+			char c = s.charAt(i++);
+			if (c < 0x80) {
+				// 0xxxxxxx
+				size += 1;
+			}
+			else if (c < 0x800) {
+				// 110xxxxx 10xxxxxx
+				size += 2;
+			}
+			else if (c >= 0xD800 && c <= 0xDBFF) {
+				// Surrogate pair -> 4 bytes if well-formed.
+				if (i < len) {
+					char c2 = s.charAt(i);
+					if (c2 >= 0xDC00 && c2 <= 0xDFFF) {
+						size += 4;
+						i++; // consume low surrogate
+					}
+					else {
+						// Unmatched high surrogate treated as 3-byte replacement form.
+						size += 3;
+					}
+				}
+				else {
+					// Unmatched high surrogate treated as 3-byte replacement form.
+					size += 3;
+				}
+			}
+			else {
+				// 1110xxxx 10xxxxxx 10xxxxxx
+				size += 3;
+			}
+		}
+
+		return size;
 	}
 
 	/**
