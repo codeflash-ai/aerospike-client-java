@@ -1565,7 +1565,8 @@ public class Cluster implements Runnable, Closeable {
 	 * This function is left for backwards compatibility. Use {@link #getCommandCount()} instead.
 	 */
 	public final long getTranCount() {
-		return commandCount.get();
+		// Delegate to the canonical getCommandCount() to ensure a single, optimizable retrieval path.
+		return getCommandCount();
 	}
 
 	/**
