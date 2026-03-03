@@ -30,6 +30,7 @@ public final class Expression implements Serializable {
 	private static final long serialVersionUID = 1L;
 
 	private final byte[] bytes;
+    private transient int cachedSize = -1;
 
 	/**
 	 * Expression constructor used by {@link Exp#build(Exp)}
@@ -40,6 +41,8 @@ public final class Expression implements Serializable {
 		packer.createBuffer();
 		exp.pack(packer);
 		bytes = packer.getBuffer();
+		// Cache computed size for faster subsequent size() calls.
+		cachedSize = bytes.length + Command.FIELD_HEADER_SIZE;
 	}
 
 	/**
@@ -47,6 +50,8 @@ public final class Expression implements Serializable {
 	 */
 	Expression(byte[] bytes) {
 		this.bytes = bytes;
+		// Cache computed size for faster subsequent size() calls.
+		cachedSize = bytes.length + Command.FIELD_HEADER_SIZE;
 	}
 
 	/**
@@ -89,7 +94,14 @@ public final class Expression implements Serializable {
 	 * For internal use only.
 	 */
 	public int size() {
-		return bytes.length + Command.FIELD_HEADER_SIZE;
+		int cs = cachedSize;
+		if (cs != -1) {
+			return cs;
+		}
+		// Fallback (should not usually occur) to compute and cache.
+		cs = bytes.length + Command.FIELD_HEADER_SIZE;
+		cachedSize = cs;
+		return cs;
 	}
 
 	/**
