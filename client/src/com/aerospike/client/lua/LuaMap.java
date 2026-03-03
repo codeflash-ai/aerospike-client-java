@@ -41,7 +41,9 @@ public final class LuaMap extends LuaUserdata implements LuaData {
 	}
 
 	public LuaInteger size() {
-		return LuaInteger.valueOf(map.size());
+		// Use a local primitive to reduce field access overhead.
+		int s = map.size();
+		return LuaInteger.valueOf(s);
 	}
 
 	public LuaString toLuaString() {
