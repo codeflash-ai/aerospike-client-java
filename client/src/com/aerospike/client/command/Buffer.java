@@ -212,7 +212,17 @@ public final class Buffer {
 	}
 
 	public static String utf8ToString(byte[] buf, int offset, int length) {
-		return new String(buf, offset, length, StandardCharsets.UTF_8);
+		// Fast path: if all bytes are ASCII (0x00 - 0x7F), use ISO_8859_1 decoding
+		// which is a single-byte direct mapping and cheaper than UTF-8 decoding.
+		int end = offset + length;
+		for (int i = offset; i < end; i++) {
+			if (buf[i] < 0) {
+				// Non-ASCII byte found; fall back to full UTF-8 decoding to preserve behavior.
+				return new String(buf, offset, length, StandardCharsets.UTF_8);
+			}
+		}
+		// All bytes are ASCII; ISO_8859_1 produces identical result for 0x00-0x7F.
+		return new String(buf, offset, length, StandardCharsets.ISO_8859_1);
 	}
 
 	/**
