@@ -462,12 +462,13 @@ public final class Buffer {
 	 * Convert big endian signed 32 bits to int.
 	 */
 	public static int bytesToInt(byte[] buf, int offset) {
-		return (
-			((buf[offset]   & 0xFF) << 24) |
-			((buf[offset+1] & 0xFF) << 16) |
-			((buf[offset+2] & 0xFF) << 8) |
-			((buf[offset+3] & 0xFF) << 0)
-			);
+		final byte[] b = buf;
+		final int i = offset;
+		int b0 = b[i]     & 0xFF;
+		int b1 = b[i + 1] & 0xFF;
+		int b2 = b[i + 2] & 0xFF;
+		int b3 = b[i + 3] & 0xFF;
+		return (b0 << 24) | (b1 << 16) | (b2 << 8) | b3;
 	}
 
 	/**
