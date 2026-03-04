@@ -23,6 +23,8 @@ import gnu.crypto.hash.RipeMD160;
 import gnu.crypto.util.Base64;
 
 public final class Crypto {
+    private static final java.util.Base64.Encoder BASE64_ENCODER = java.util.Base64.getEncoder();
+
 	/**
 	 * Generate unique server hash value from set name, key type and user defined key.
 	 * The hash function is RIPEMD-160 (a 160 bit hash).
@@ -48,10 +50,7 @@ public final class Crypto {
 		return Base64.decode(src, off, len);
 	}
 
-	/**
-	 * Encode bytes into a base64 encoded string.
-	 */
 	public static String encodeBase64(byte[] src) {
-		return Base64.encode(src, 0, src.length, false);
+		return BASE64_ENCODER.encodeToString(src);
 	}
 }
