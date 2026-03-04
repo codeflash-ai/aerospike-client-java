@@ -74,7 +74,7 @@ public class DynamicBatchReadConfig {
 
     public IntProperty getConnectTimeout() { return connectTimeout; }
 
-    public Replica getReplica() { return replica; }
+    public Replica getReplica() { return this.replica; }
 
     public IntProperty getSleepBetweenRetries() { return sleepBetweenRetries; }
 
