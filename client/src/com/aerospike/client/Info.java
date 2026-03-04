@@ -565,29 +565,31 @@ public class Info {
 	}
 
 	public HashMap<String,String> parseMultiResponse() throws AerospikeException {
-		HashMap<String, String> responses = new HashMap<String,String>();
+		// Use local references to minimize repeated field access in the hot loop.
+		final byte[] buf = this.buffer;
+		final int len = this.length;
+
+		// Reasonable default size to reduce rehashing for small responses.
+		HashMap<String,String> responses = new HashMap<String,String>(8);
 		int offset = 0;
 		int begin = 0;
 
-		while (offset < length) {
-			byte b = buffer[offset];
+		while (offset < len) {
+			byte b = buf[offset];
 
 			if (b == '\t') {
-				String name = Buffer.utf8ToString(buffer, begin, offset - begin);
+				String name = Buffer.utf8ToString(buf, begin, offset - begin);
 				offset++;
 				checkError();
 				begin = offset;
 
 				// Parse field value.
-				while (offset < length) {
-					if (buffer[offset] == '\n') {
-						break;
-					}
+				while (offset < len && buf[offset] != '\n') {
 					offset++;
 				}
 
 				if (offset > begin) {
-					String value = Buffer.utf8ToString(buffer, begin, offset - begin);
+					String value = Buffer.utf8ToString(buf, begin, offset - begin);
 					responses.put(name, value);
 				}
 				else {
@@ -597,7 +599,7 @@ public class Info {
 			}
 			else if (b == '\n') {
 				if (offset > begin) {
-					String name = Buffer.utf8ToString(buffer, begin, offset - begin);
+					String name = Buffer.utf8ToString(buf, begin, offset - begin);
 					responses.put(name, null);
 				}
 				begin = ++offset;
@@ -608,7 +610,7 @@ public class Info {
 		}
 
 		if (offset > begin) {
-			String name = Buffer.utf8ToString(buffer, begin, offset - begin);
+			String name = Buffer.utf8ToString(buf, begin, offset - begin);
 			responses.put(name, null);
 		}
 		return responses;
