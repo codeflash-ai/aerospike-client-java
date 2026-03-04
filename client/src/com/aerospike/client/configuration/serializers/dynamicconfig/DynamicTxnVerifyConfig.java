@@ -74,7 +74,10 @@ public class DynamicTxnVerifyConfig {
 
     public IntProperty getConnectTimeout() { return connectTimeout; }
 
-    public Replica getReplica() { return replica; }
+    public Replica getReplica() { 
+        Replica r = replica;
+        return r;
+    }
 
     public IntProperty getSleepBetweenRetries() { return sleepBetweenRetries; }
 
