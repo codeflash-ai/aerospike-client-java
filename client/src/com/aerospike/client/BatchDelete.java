@@ -89,25 +89,31 @@ public final class BatchDelete extends BatchRecord {
 	public int size(Policy parentPolicy, ConfigurationProvider configProvider) {
 		int size = 2; // gen(2) = 2
 
-		if (policy != null) {
-			if (policy.filterExp != null) {
-				size += policy.filterExp.size();
-			}
+		// Cache frequently accessed values to minimize field dereferences.
+		BatchDeletePolicy p = this.policy;
+		boolean parentSendKey = parentPolicy.sendKey;
 
-			boolean sendkey;
-			sendkey = policy.sendKey;
-			if (configProvider != null) {
-				Configuration config = configProvider.fetchConfiguration();
-				if (config != null && config.hasDBDCsendKey()) {
-					sendkey = config.dynamicConfiguration.dynamicBatchDeleteConfig.sendKey.value;
-				}
-			}
-
-			if (sendkey || parentPolicy.sendKey) {
+		if (p == null) {
+			if (parentSendKey) {
 				size += key.userKey.estimateSize() + Command.FIELD_HEADER_SIZE + 1;
 			}
+			return size;
 		}
-		else if (parentPolicy.sendKey) {
+
+		if (p.filterExp != null) {
+			size += p.filterExp.size();
+		}
+
+		boolean sendKey = p.sendKey;
+
+		if (configProvider != null) {
+			Configuration config = configProvider.fetchConfiguration();
+			if (config != null && config.hasDBDCsendKey()) {
+				sendKey = config.dynamicConfiguration.dynamicBatchDeleteConfig.sendKey.value;
+			}
+		}
+
+		if (sendKey || parentSendKey) {
 			size += key.userKey.estimateSize() + Command.FIELD_HEADER_SIZE + 1;
 		}
 		return size;
