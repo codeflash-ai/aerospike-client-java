@@ -435,7 +435,8 @@ public final class Filter {
 	 * @return				filter instance
 	 */
 	public static Filter geoWithinRegionByIndex(String indexName, IndexCollectionType type, String region) {
-		return new Filter(indexName, null, type, ParticleType.GEOJSON, Value.get(region), Value.get(region));
+		Value v = Value.get(region);
+		return new Filter(indexName, null, type, ParticleType.GEOJSON, v, v);
 	} 
 
 	/**
