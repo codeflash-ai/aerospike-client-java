@@ -30,6 +30,10 @@ import com.aerospike.client.util.Unpacker;
 
 public class LuaUnpacker extends Unpacker<LuaValue> {
 	private LuaInstance instance;
+    private static final int STRING_CACHE_SIZE = 256;
+    private static final int STRING_CACHE_MASK = STRING_CACHE_SIZE - 1;
+    private final String[] stringCacheKeys = new String[STRING_CACHE_SIZE];
+    private final LuaString[] stringCacheValues = new LuaString[STRING_CACHE_SIZE];
 
 	public LuaUnpacker(LuaInstance instance, byte[] buffer, int offset, int length) {
 		super(buffer, offset, length);
@@ -53,7 +57,26 @@ public class LuaUnpacker extends Unpacker<LuaValue> {
 
 	@Override
 	protected LuaString getString(String value) {
-		return LuaString.valueOf(value);
+		// Preserve original behavior for null values (delegate directly),
+		// so any exceptions or handling that LuaString.valueOf does remain unchanged.
+		if (value == null) {
+			return LuaString.valueOf(value);
+		}
+
+		int h = value.hashCode();
+		int idx = (h ^ (h >>> 16)) & STRING_CACHE_MASK;
+		String key = stringCacheKeys[idx];
+
+		// Fast positive-hit path: return cached LuaString when key matches.
+		if (key != null && key.equals(value)) {
+			return stringCacheValues[idx];
+		}
+
+		// Miss: create LuaString and populate the cache slot.
+		LuaString ls = LuaString.valueOf(value);
+		stringCacheKeys[idx] = value;
+		stringCacheValues[idx] = ls;
+		return ls;
 	}
 
 	@Override
