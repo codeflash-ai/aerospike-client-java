@@ -82,7 +82,10 @@ public class DynamicTxnVerifyConfig {
 
     public IntProperty getTimeoutDelay() { return timeoutDelay; }
 
-    public IntProperty getTotalTimeout() { return totalTimeout; }
+    public IntProperty getTotalTimeout() {
+        IntProperty t = totalTimeout;
+        return t;
+    }
 
     public IntProperty getMaxRetries() { return maxRetries; }
 
