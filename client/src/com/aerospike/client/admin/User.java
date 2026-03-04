@@ -69,10 +69,9 @@ public final class User {
 	}
 
 	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + ((name == null) ? 0 : name.hashCode());
-		return result;
+		// Use a local copy to avoid repeated field access and compute directly.
+		String n = name;
+		return (n == null) ? 31 : (n.hashCode() + 31);
 	}
 
 	public boolean equals(Object obj) {
