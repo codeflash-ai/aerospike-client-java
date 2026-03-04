@@ -281,4 +281,11 @@ public final class LuaInstance {
 
 		return LuaValue.NIL;
 	}
+
+    private static byte[] copyBytes(byte[] src, int off, int len) {
+    	byte[] dst = new byte[len];
+    	System.arraycopy(src, off, dst, 0, len);
+    	return dst;
+    }
+
 }
