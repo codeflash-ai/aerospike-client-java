@@ -98,7 +98,171 @@ public final class Host {
 	 */
 	public static Host[] parseHosts(String str, int defaultPort) {
 		try {
-			return new HostParser(str).parseHosts(defaultPort);
+			if (str == null) {
+				throw new IllegalArgumentException("hosts string is null");
+			}
+
+			int len = str.length();
+			// Quick pass to estimate number of hosts for ArrayList capacity.
+			int est = 1;
+			boolean inBracket = false;
+			for (int i = 0; i < len; i++) {
+				char c = str.charAt(i);
+				if (c == '[') {
+					inBracket = true;
+				}
+				else if (c == ']') {
+					inBracket = false;
+				}
+				else if (c == ',' && !inBracket) {
+					est++;
+				}
+			}
+
+			List<Host> list = new ArrayList<>(est);
+			int i = 0;
+			while (i < len) {
+				// Find next segment (comma not inside brackets)
+				int start = i;
+				inBracket = false;
+				while (i < len) {
+					char c = str.charAt(i);
+					if (c == '[') {
+						inBracket = true;
+					}
+					else if (c == ']') {
+						inBracket = false;
+					}
+					else if (c == ',' && !inBracket) {
+						break;
+					}
+					i++;
+				}
+				int end = i; // exclusive
+				// skip comma
+				if (i < len && str.charAt(i) == ',') {
+					i++;
+				}
+
+				// Trim leading/trailing whitespace for the segment
+				while (start < end && Character.isWhitespace(str.charAt(start))) {
+					start++;
+				}
+				while (end > start && Character.isWhitespace(str.charAt(end - 1))) {
+					end--;
+				}
+				if (start >= end) {
+					// Empty segment is invalid.
+					throw new IllegalArgumentException("Empty host segment");
+				}
+
+				String host = null;
+				String tlsName = null;
+				int port = defaultPort;
+
+				int pos = start;
+				// IPv6 bracketed address
+				if (pos < end && str.charAt(pos) == '[') {
+					pos++;
+					int hostStart = pos;
+					// find closing bracket
+					while (pos < end && str.charAt(pos) != ']') {
+						pos++;
+					}
+					if (pos >= end) {
+						throw new IllegalArgumentException("Unterminated IPv6 address");
+					}
+					host = str.substring(hostStart, pos);
+					pos++; // move past ']'
+
+					// If there's more, it should be :tls or :port or :tls:port
+					if (pos < end && str.charAt(pos) == ':') {
+						pos++; // start of next field
+						int fieldStart = pos;
+						// find next colon separating tls and port (if any)
+						int colonIndex = -1;
+						for (int j = pos; j < end; j++) {
+							if (str.charAt(j) == ':') {
+								colonIndex = j;
+								break;
+							}
+						}
+						if (colonIndex == -1) {
+							String field = str.substring(fieldStart, end).trim();
+							if (field.length() > 0) {
+								if (isDigits(field)) {
+									port = Integer.parseInt(field);
+								}
+								else {
+									tlsName = field;
+								}
+							}
+						}
+						else {
+							String field1 = str.substring(fieldStart, colonIndex).trim();
+							String field2 = str.substring(colonIndex + 1, end).trim();
+							if (field1.length() > 0) {
+								tlsName = field1;
+							}
+							if (field2.length() > 0) {
+								port = Integer.parseInt(field2);
+							}
+						}
+					}
+				}
+				else {
+					// Non-bracketed: split on up to two colons
+					int firstColon = -1;
+					int secondColon = -1;
+					for (int j = start; j < end; j++) {
+						if (str.charAt(j) == ':') {
+							if (firstColon == -1) {
+								firstColon = j;
+							}
+							else {
+								secondColon = j;
+								break;
+							}
+						}
+					}
+					if (firstColon == -1) {
+						host = str.substring(start, end).trim();
+					}
+					else if (secondColon == -1) {
+						host = str.substring(start, firstColon).trim();
+						String after = str.substring(firstColon + 1, end).trim();
+						if (after.length() > 0) {
+							if (isDigits(after)) {
+								port = Integer.parseInt(after);
+							}
+							else {
+								tlsName = after;
+							}
+						}
+					}
+					else {
+						host = str.substring(start, firstColon).trim();
+						tlsName = str.substring(firstColon + 1, secondColon).trim();
+						String after = str.substring(secondColon + 1, end).trim();
+						if (after.length() > 0) {
+							port = Integer.parseInt(after);
+						}
+					}
+				}
+
+				if (host == null || host.length() == 0) {
+					throw new IllegalArgumentException("Missing host");
+				}
+
+				if (tlsName == null) {
+					list.add(new Host(host, port));
+				}
+				else {
+					list.add(new Host(host, tlsName, port));
+				}
+			}
+
+			return list.toArray(new Host[0]);
 		}
 		catch (Throwable e) {
 			throw new AerospikeException("Invalid hosts string: " + str);
@@ -242,4 +406,19 @@ public final class Host {
 			return str.substring(begin, offset);
 		}
 	}
+
+    private static boolean isDigits(String s) {
+    	int sl = s.length();
+    	if (sl == 0) {
+    		return false;
+    	}
+    	for (int i = 0; i < sl; i++) {
+    		char c = s.charAt(i);
+    		if (c < '0' || c > '9') {
+    			return false;
+    		}
+    	}
+    	return true;
+    }
+
 }
