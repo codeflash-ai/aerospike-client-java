@@ -91,21 +91,22 @@ public final class Pool {
 		lock.lock();
 
 		try {
-			if (size == 0) {
+			int s = size;
+			if (s == 0) {
 				return null;
 			}
 
-			if (head == 0) {
-				head = conns.length - 1;
-			}
-			else {
-				head--;
-			}
-			size--;
-
 			final Connection[] conns = this.conns;
-			final Connection conn = conns[head];
-			conns[head] = null;
+			int h = head - 1;
+			if (h < 0) {
+				h = conns.length - 1;
+			}
+			head = h;
+			s--;
+			size = s;
+
+			final Connection conn = conns[h];
+			conns[h] = null;
 			return conn;
 		}
 		finally {
