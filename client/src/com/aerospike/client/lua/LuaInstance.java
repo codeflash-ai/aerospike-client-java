@@ -243,32 +243,34 @@ public final class LuaInstance {
 			return value.getLuaValue(this);
 		}
 
-		if (obj instanceof byte[]) {
+		Class<?> cls = obj.getClass();
+
+		if (cls == byte[].class) {
 			return new LuaBytes(this, (byte[]) obj);
 		}
 
-		if (obj instanceof String) {
+		if (cls == String.class) {
 			return LuaString.valueOf((String) obj);
 		}
 
-		if (obj instanceof Integer) {
-			return LuaInteger.valueOf((Integer) obj);
+		if (cls == Integer.class) {
+			return LuaInteger.valueOf(((Integer) obj).intValue());
 		}
 
-		if (obj instanceof Long) {
-			return LuaInteger.valueOf((Long) obj);
+		if (cls == Long.class) {
+			return LuaInteger.valueOf(((Long) obj).longValue());
 		}
 
-		if (obj instanceof Double) {
-			return LuaDouble.valueOf((Double) obj);
+		if (cls == Double.class) {
+			return LuaDouble.valueOf(((Double) obj).doubleValue());
 		}
 
-		if (obj instanceof Float) {
-			return LuaDouble.valueOf((Float) obj);
+		if (cls == Float.class) {
+			return LuaDouble.valueOf(((Float) obj).doubleValue());
 		}
 
-		if (obj instanceof Boolean) {
-			return LuaBoolean.valueOf((Boolean) obj);
+		if (cls == Boolean.class) {
+			return LuaBoolean.valueOf(((Boolean) obj).booleanValue());
 		}
 
 		if (obj instanceof List<?>) {
