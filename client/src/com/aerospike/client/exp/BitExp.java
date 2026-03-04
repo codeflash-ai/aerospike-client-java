@@ -363,8 +363,7 @@ public final class BitExp {
 	 * @param bin			bin or blob value expression
 	 */
 	public static Exp lscan(Exp bitOffset, Exp bitSize, Exp value, Exp bin) {
-		byte[] bytes = Pack.pack(LSCAN, bitOffset, bitSize, value);
-		return addRead(bin, bytes, Exp.Type.INT);
+		return addRead(bin, Pack.pack(LSCAN, bitOffset, bitSize, value), Exp.Type.INT);
 	}
 
 	/**
