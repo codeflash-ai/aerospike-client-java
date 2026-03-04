@@ -99,17 +99,26 @@ public final class LuaMap extends LuaUserdata implements LuaData {
 	}
 
 	public LuaMap diff(LuaMap map2) {
-		HashMap<LuaValue,LuaValue> target = new HashMap<LuaValue,LuaValue>(map.size() + map2.map.size());
+		// Cache reference to other map to avoid repeated field access
+		final Map<LuaValue,LuaValue> other = map2.map;
 
-		for (Entry<LuaValue,LuaValue> entry : map.entrySet()) {
-			if (!map2.map.containsKey(entry.getKey())) {
-				target.put(entry.getKey(), entry.getValue());
+		// Expected number of entries in the result is at most sum of sizes.
+		// Compute initial capacity to avoid rehashing (load factor = 0.75).
+		int expected = map.size() + other.size();
+		int capacity = (int)(expected / 0.75f) + 1;
+		HashMap<LuaValue,LuaValue> target = new HashMap<LuaValue,LuaValue>(capacity);
+
+		// Copy all entries from this map, then process the other map:
+		// - If a key exists in target (was in this map), remove it (present in both -> exclude).
+		// - Otherwise, add the entry from the other map (unique to other).
+		target.putAll(map);
+		for (Entry<LuaValue,LuaValue> entry : other.entrySet()) {
+			LuaValue key = entry.getKey();
+			if (target.containsKey(key)) {
+				target.remove(key);
 			}
-		}
-
-		for (Entry<LuaValue,LuaValue> entry : map2.map.entrySet()) {
-			if (!map.containsKey(entry.getKey())) {
-				target.put(entry.getKey(), entry.getValue());
+			else {
+				target.put(key, entry.getValue());
 			}
 		}
 		return new LuaMap(instance, target);
