@@ -284,23 +284,13 @@ public final class Record {
 		if (this == obj) {
 			return true;
 		}
-		if (obj == null) {
-			return false;
-		}
-		if (getClass() != obj.getClass()) {
+		if (obj == null || getClass() != obj.getClass()) {
 			return false;
 		}
 		Record other = (Record) obj;
-		if (expiration != other.expiration) {
-			return false;
-		}
-		if (generation != other.generation) {
-			return false;
-		}
-		if (bins == null) {
-			return other.bins == null;
-		} else {
-			return bins.equals(other.bins);
-		}
+		// Compare primitives first (cheap), then bins using null-safe Objects.equals.
+		return this.expiration == other.expiration &&
+			   this.generation == other.generation &&
+			   Objects.equals(this.bins, other.bins);
 	}
 }
