@@ -221,45 +221,51 @@ public final class RecordParser {
 			return new Record(null, generation, expiration);
 		}
 
-		Map<String,Object> bins = new LinkedHashMap<>();
+		// Cache hot fields locally to reduce field accesses.
+		final byte[] buf = dataBuffer;
+		int off = dataOffset;
+		final int ops = opCount;
 
-		for (int i = 0 ; i < opCount; i++) {
-			int opSize = Buffer.bytesToInt(dataBuffer, dataOffset);
-			byte particleType = dataBuffer[dataOffset + 5];
-			byte nameSize = dataBuffer[dataOffset + 7];
-			String name = Buffer.utf8ToString(dataBuffer, dataOffset + 8, nameSize);
-			dataOffset += 4 + 4 + nameSize;
+		// Pre-size the map to avoid rehashing for typical case.
+		int initCap = Math.max(16, (int)(ops / 0.75f) + 1);
+		Map<String,Object> bins = new LinkedHashMap<>(initCap);
+
+		for (int i = 0 ; i < ops; i++) {
+			int opSize = Buffer.bytesToInt(buf, off);
+			byte particleType = buf[off + 5];
+			byte nameSize = buf[off + 7];
+			String name = Buffer.utf8ToString(buf, off + 8, nameSize);
+			off += 4 + 4 + nameSize;
 
 			int particleBytesSize = opSize - (4 + nameSize);
-			Object value = Buffer.bytesToParticle(particleType, dataBuffer, dataOffset, particleBytesSize);
-			dataOffset += particleBytesSize;
+			Object value = Buffer.bytesToParticle(particleType, buf, off, particleBytesSize);
+			off += particleBytesSize;
 
 			if (isOperation) {
-				if (bins.containsKey(name)) {
-					// Multiple values returned for the same bin.
-					Object prev = bins.get(name);
+				Object prev = bins.get(name);
 
-					if (prev instanceof OpResults) {
-						// List already exists.  Add to it.
-						OpResults list = (OpResults)prev;
-						list.add(value);
-					}
-					else {
-						// Make a list to store all values.
-						OpResults list = new OpResults();
-						list.add(prev);
-						list.add(value);
-						bins.put(name, list);
-					}
+				if (prev == null) {
+					bins.put(name, value);
+				}
+				else if (prev instanceof OpResults) {
+					// List already exists.  Add to it.
+					((OpResults)prev).add(value);
 				}
 				else {
-					bins.put(name, value);
+					// Make a list to store all values.
+					OpResults list = new OpResults();
+					list.add(prev);
+					list.add(value);
+					bins.put(name, list);
 				}
 			}
 			else {
 				bins.put(name, value);
 			}
 		}
+
+		// Update field once.
+		dataOffset = off;
 		return new Record(bins, generation, expiration);
 	}
 }
