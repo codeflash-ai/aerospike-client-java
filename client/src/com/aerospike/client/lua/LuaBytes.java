@@ -128,10 +128,14 @@ public final class LuaBytes extends LuaUserdata implements LuaData {
 	}
 
 	public int getBigInt32(int offset) {
-		if (offset < 0 || offset + 4 > this.length) {
+		// Cache fields to local variables to avoid repeated field access and inline byte->int conversion.
+		byte[] b = this.bytes;
+		int len = this.length;
+		if (offset < 0 || offset + 4 > len) {
 			return 0;
 		}
-		return Buffer.bytesToInt(bytes, offset);
+		int i = offset;
+		return ((b[i] & 0xFF) << 24) | ((b[i + 1] & 0xFF) << 16) | ((b[i + 2] & 0xFF) << 8) | (b[i + 3] & 0xFF);
 	}
 
 	public int getLittleInt32(int offset) {
