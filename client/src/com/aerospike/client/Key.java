@@ -297,9 +297,31 @@ public final class Key {
 
 		Key other = (Key) obj;
 
-		if (! Arrays.equals(digest, other.digest)) {
+		// Fast-path: same array reference -> compare namespace (same behavior as Arrays.equals + namespace.equals)
+		byte[] d1 = this.digest;
+		byte[] d2 = other.digest;
+
+		if (d1 == d2) {
+			return namespace.equals(other.namespace);
+		}
+
+		// If either is null (but not both), they are not equal.
+		if (d1 == null || d2 == null) {
 			return false;
 		}
+
+		// If lengths differ, not equal.
+		if (d1.length != d2.length) {
+			return false;
+		}
+
+		// Compare contents.
+		for (int i = 0, len = d1.length; i < len; i++) {
+			if (d1[i] != d2[i]) {
+				return false;
+			}
+		}
+
 		return namespace.equals(other.namespace);
 	}
 
