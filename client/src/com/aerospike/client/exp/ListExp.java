@@ -150,8 +150,7 @@ public final class ListExp {
 	 * @param ctx			optional context path for nested CDT
 	 */
 	public static Exp sort(int sortFlags, Exp bin, CTX... ctx) {
-		byte[] bytes = Pack.pack(SORT, sortFlags, ctx);
-		return addWrite(bin, bytes, ctx);
+		return addWrite(bin, Pack.pack(SORT, sortFlags, ctx), ctx);
 	}
 
 	/**
