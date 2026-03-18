@@ -89,6 +89,6 @@ public class Counter {
 		if (count == null) {
 			return 0;
 		}
-		return counterMap.get(namespace).longValue();
+		return count.get();
 	}
 }
