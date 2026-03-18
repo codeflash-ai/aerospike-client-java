@@ -112,8 +112,16 @@ public final class LuaList extends LuaUserdata implements LuaData {
 	}
 
 	public LuaList merge(LuaList list2) {
-		List<LuaValue> target = new ArrayList<LuaValue>(this.list);
-		target.addAll(list2.list);
+		// Pre-size to combined capacity to avoid reallocation when adding
+		int size1 = this.list.size();
+		int size2 = list2.list.size();
+		List<LuaValue> target = new ArrayList<LuaValue>(size1 + size2);
+		if (size1 > 0) {
+			target.addAll(this.list);
+		}
+		if (size2 > 0) {
+			target.addAll(list2.list);
+		}
 		return new LuaList(instance, target);
 	}
 
