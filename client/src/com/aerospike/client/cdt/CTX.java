@@ -138,22 +138,20 @@ public final class CTX {
 	public static CTX[] fromBytes(byte[] bytes) {
 		List<?> list = (List<?>)Unpacker.unpackObjectList(bytes, 0, bytes.length);
 		int max = list.size();
+
+		if ((max & 1) != 0) {
+			throw new AerospikeException.Parse("List count must be even");
+		}
+
 		CTX[] ctx = new CTX[max / 2];
-		int i = 0;
 		int count = 0;
 
-		while (i < max) {
-			int id = (int)(long)(Long)list.get(i);
-
-			if (++i >= max) {
-				throw new AerospikeException.Parse("List count must be even");
-			}
-
-			Object obj = list.get(i);
+		for (int i = 0; i < max; i += 2) {
+			int id = ((Number) list.get(i)).intValue();
+			Object obj = list.get(i + 1);
 			Value val = Value.get(obj);
 
 			ctx[count++] = new CTX(id, val);
-			i++;
 		}
 		return ctx;
 	}
