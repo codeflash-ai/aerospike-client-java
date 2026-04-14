@@ -199,14 +199,22 @@ public final class Buffer {
 				buf[offset++] = (byte) c;
 			}
 			else if (c < 0x800) {
-				buf[offset++] = (byte)(0xc0 | ((c >> 6)));
+				buf[offset++] = (byte)(0xc0 | (c >> 6));
+				buf[offset++] = (byte)(0x80 | (c & 0x3f));
+			}
+			else if (c < 0xD800 || c > 0xDFFF) {
+				// 3-byte BMP character (U+0800..U+D7FF, U+E000..U+FFFF)
+				buf[offset++] = (byte)(0xe0 | (c >> 12));
+				buf[offset++] = (byte)(0x80 | ((c >> 6) & 0x3f));
 				buf[offset++] = (byte)(0x80 | (c & 0x3f));
 			}
 			else {
-				// Encountered a different encoding other than 2-byte UTF8. Let java handle it.
-				byte[] value = s.getBytes(StandardCharsets.UTF_8);
-				System.arraycopy(value, 0, buf, startOffset, value.length);
-				return value.length;
+				// Surrogate pair -> 4-byte code point (U+10000..U+10FFFF)
+				int codePoint = Character.toCodePoint((char)c, s.charAt(++i));
+				buf[offset++] = (byte)(0xf0 | (codePoint >> 18));
+				buf[offset++] = (byte)(0x80 | ((codePoint >> 12) & 0x3f));
+				buf[offset++] = (byte)(0x80 | ((codePoint >> 6) & 0x3f));
+				buf[offset++] = (byte)(0x80 | (codePoint & 0x3f));
 			}
 		}
 		return offset - startOffset;
@@ -223,11 +231,9 @@ public final class Buffer {
 	 */
 	public static int utf8DigitsToInt(byte[] buf, int begin, int end) {
 		int val = 0;
-		int mult = 1;
 
-		for (int i = end - 1; i >= begin; i--) {
-			val += (buf[i] - 48) * mult;
-			mult *= 10;
+		for (int i = begin; i < end; i++) {
+			val = val * 10 + (buf[i] - 48);
 		}
 		return val;
 	}

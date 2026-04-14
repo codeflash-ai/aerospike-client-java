@@ -68,7 +68,8 @@ public final class ThreadLocalData {
 		if (Log.debugEnabled()) {
 			Log.debug("Thread " + Thread.currentThread().getName() + " resize buffer to " + size);
 		}
-		BufferThreadLocal.set(new byte[size]);
-		return BufferThreadLocal.get();
+		byte[] buffer = new byte[size];
+		BufferThreadLocal.set(buffer);
+		return buffer;
 	}
 }

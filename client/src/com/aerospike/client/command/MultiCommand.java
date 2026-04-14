@@ -114,12 +114,15 @@ public abstract class MultiCommand extends SyncCommand {
 		// Instead, use separate heap allocated buffers.
 		byte[] buf = null;
 		byte[] ubuf = null;
+		byte[] protoBuf = new byte[8];
+		byte[] b = new byte[12];
 		int receiveSize;
 		int bytesIn = 0;
+		Inflater inf = new Inflater();
 
+		try {
 		while (true) {
 			// Read header
-			byte[] protoBuf = new byte[8];
 			conn.readFully(protoBuf, 8, Command.STATE_READ_HEADER);
 			bytesIn += 8;
 
@@ -159,18 +162,10 @@ public abstract class MultiCommand extends SyncCommand {
 				// First 4 bytes of detail contains whether this is the last
 				// group to be sent.  Consider this as part of header.
 				// Copy proto back into buffer to complete header.
-				byte[] b = new byte[12];
-				int count = 0;
+				System.arraycopy(protoBuf, 0, b, 0, 8);
+				System.arraycopy(buf, 0, b, 8, rt.offset);
 
-				for (int i = 0; i < 8; i++) {
-					b[count++] = protoBuf[i];
-				}
-
-				for (int i = 0; i < rt.offset; i++) {
-					b[count++] = buf[i];
-				}
-
-				throw new ReadTimeout(b, rt.offset + 8, count, Command.STATE_READ_HEADER);
+				throw new ReadTimeout(b, rt.offset + 8, rt.offset + 8, Command.STATE_READ_HEADER);
 			}
 
 			long type = (proto >> 48) & 0xff;
@@ -192,27 +187,23 @@ public abstract class MultiCommand extends SyncCommand {
 					ubuf = new byte[capacity];
 				}
 
-				Inflater inf = new Inflater();
+				inf.setInput(buf, 8, size - 8);
+				int rsize;
+
 				try {
-					inf.setInput(buf, 8, size - 8);
-					int rsize;
-
-					try {
-						rsize = inf.inflate(ubuf);
-					}
-					catch (DataFormatException dfe) {
-						throw new AerospikeException.Serialize(dfe);
-					}
-
-					if (rsize != usize) {
-						throw new AerospikeException("Decompressed size " + rsize + " is not expected " + usize);
-					}
-					dataBuffer = ubuf;
-					dataOffset = 8;
-					receiveSize = usize - 8;
-				} finally {
-					inf.end();
+					rsize = inf.inflate(ubuf);
 				}
+				catch (DataFormatException dfe) {
+					throw new AerospikeException.Serialize(dfe);
+				}
+
+				if (rsize != usize) {
+					throw new AerospikeException("Decompressed size " + rsize + " is not expected " + usize);
+				}
+				dataBuffer = ubuf;
+				dataOffset = 8;
+				receiveSize = usize - 8;
+				inf.reset();
 			}
 			else {
 				throw new AerospikeException("Invalid proto type: " + type + " Expected: " + Command.AS_MSG_TYPE);
@@ -221,6 +212,9 @@ public abstract class MultiCommand extends SyncCommand {
 			if (! parseGroup(receiveSize)) {
 				break;
 			}
+		}
+		} finally {
+			inf.end();
 		}
 	}
 
